@@ -39,7 +39,6 @@ export const App: React.FC<{ delay?: number }> = ({ delay = 300 }) => {
   }, [applyQuery]);
 
   const handlePerson = (person: Person) => {
-    console.log("Selected Person:", person)
     setSelectedPerson(person);
     setQuery(person.name);
     setFilterPeople([]);
@@ -49,8 +48,9 @@ export const App: React.FC<{ delay?: number }> = ({ delay = 300 }) => {
   useEffect(() => {
     if (selectedPerson && query.trim() !== selectedPerson.name) {
       const personExists = peopleFromServer.some(
-        p => p.name.toLowerCase() === query.toLowerCase()
+        p => p.name.toLowerCase() === query.toLowerCase(),
       );
+
       if (!personExists) {
         setSelectedPerson(null);
       }
@@ -75,7 +75,7 @@ export const App: React.FC<{ delay?: number }> = ({ delay = 300 }) => {
               data-cy="search-input"
               value={query}
               onFocus={() => setIsDropdownOpen(true)} // Show dropdown on focus
-              onBlur={(e) => {
+              onBlur={e => {
                 setTimeout(() => {
                   if (!e.relatedTarget?.classList.contains('dropdown-item')) {
                     setIsDropdownOpen(false);

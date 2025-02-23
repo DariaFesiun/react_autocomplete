@@ -7,8 +7,14 @@ interface DropdownProps {
   onSelectPerson: (person: Person) => void;
 }
 
-export const Dropdown: React.FC<DropdownProps> = ({ isOpen, filterPeople, onSelectPerson }) => {
-  if (!isOpen) return null; // Do not render dropdown if it's not open
+export const Dropdown: React.FC<DropdownProps> = ({
+  isOpen,
+  filterPeople,
+  onSelectPerson,
+}) => {
+  if (!isOpen) {
+    return null;
+  } // Do not render dropdown if it's not open
 
   return (
     <div className="dropdown-menu" role="menu" data-cy="suggestions-list">
