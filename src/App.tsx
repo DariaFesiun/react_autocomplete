@@ -3,12 +3,14 @@ import './App.scss';
 import debounce from 'lodash.debounce';
 import { peopleFromServer } from './data/people';
 import { Person } from './types/Person';
+import { Dropdown } from './Dropdown';
 
 export const App: React.FC<{ delay?: number }> = ({ delay = 300 }) => {
   const [query, setQuery] = useState('');
   const [applyQuery, setApplyQuery] = useState('');
   const [filterPeople, setFilterPeople] = useState<Person[]>(peopleFromServer);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // For handling dropdown visibility
 
   const applyDebounce = useRef<(value: string) => void>();
 
@@ -37,14 +39,21 @@ export const App: React.FC<{ delay?: number }> = ({ delay = 300 }) => {
   }, [applyQuery]);
 
   const handlePerson = (person: Person) => {
+    console.log("Selected Person:", person)
     setSelectedPerson(person);
     setQuery(person.name);
     setFilterPeople([]);
+    setIsDropdownOpen(false); // Close the dropdown when a person is selected
   };
 
   useEffect(() => {
-    if (selectedPerson && query !== selectedPerson.name) {
-      setSelectedPerson(null);
+    if (selectedPerson && query.trim() !== selectedPerson.name) {
+      const personExists = peopleFromServer.some(
+        p => p.name.toLowerCase() === query.toLowerCase()
+      );
+      if (!personExists) {
+        setSelectedPerson(null);
+      }
     }
   }, [query, selectedPerson]);
 
@@ -65,39 +74,33 @@ export const App: React.FC<{ delay?: number }> = ({ delay = 300 }) => {
               className="input"
               data-cy="search-input"
               value={query}
+              onFocus={() => setIsDropdownOpen(true)} // Show dropdown on focus
+              onBlur={(e) => {
+                setTimeout(() => {
+                  if (!e.relatedTarget?.classList.contains('dropdown-item')) {
+                    setIsDropdownOpen(false);
+                  }
+                }, 100);
+              }} // Hide dropdown after losing focus
               onChange={e => {
                 const value = e.target.value;
 
                 setQuery(value);
                 applyDebounce.current?.(value);
+
+                if (value.trim() === '') {
+                  setFilterPeople(peopleFromServer);
+                  setIsDropdownOpen(true);
+                }
               }}
             />
           </div>
 
-          <div className="dropdown-menu" role="menu" data-cy="suggestions-list">
-            <div className="dropdown-content">
-              {filterPeople.length > 0 ? (
-                filterPeople.map((filterPerson, index) => (
-                  <a
-                    key={index}
-                    className="dropdown-item"
-                    data-cy="suggestion-item"
-                    onClick={() => handlePerson(filterPerson)}
-                  >
-                    <p className="has-text-link">{filterPerson.name}</p>
-                  </a>
-                ))
-              ) : (
-                <div
-                  className="dropdown-item"
-                  data-cy="no-suggestions-message"
-                  role="alert"
-                >
-                  <p className="has-text-danger">No matching suggestions</p>
-                </div>
-              )}
-            </div>
-          </div>
+          <Dropdown
+            isOpen={isDropdownOpen}
+            filterPeople={filterPeople}
+            onSelectPerson={handlePerson}
+          />
         </div>
       </main>
     </div>
